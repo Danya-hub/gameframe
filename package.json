@@ -1,0 +1,15 @@
+{
+  "name": "gameframe",
+  "version": "0.0.1",
+  "description": "reactive framework for web game",
+  "main": "?",
+  "scripts": {
+    "test": "?"
+  },
+  "keywords": [],
+  "author": "Danya-hub",
+  "license": "MIT",
+  "_moduleAliases": {
+    "~": "."
+  }
+}
