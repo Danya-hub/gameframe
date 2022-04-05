@@ -5,13 +5,14 @@ import Canvas from "./canvas.js";
 
 export default class {
     Circle(args) {
-        Canvas.ctx.arc(args.finalCompute.x + args.clientCompute.radius, args.finalCompute.y + args.clientCompute.radius, args.clientCompute.radius, 0, 2 * Math.PI);
-        args.isFill ? Canvas.ctx.fill() : Canvas.ctx.stroke();
+        args.$el.arc(args.finalCompute.x + args.clientCompute.radius, args.finalCompute.y + args.clientCompute.radius, args.clientCompute.radius, 0, 2 * Math.PI);
+        Canvas.ctx[args.isFill ? 'fill' : 'stroke'](args.$el);
     }
 
     Rect(args) {
-        Canvas.ctx.rect(...Object.values(Object.assign(args.clientCompute, args.finalCompute)));
-        args.isFill ? Canvas.ctx.fill() : Canvas.ctx.stroke();
+        args.$el.rect(...Object.values(Object.assign(args.clientCompute, args.finalCompute)));
+        Canvas.ctx[args.isFill ? 'fill' : 'stroke'](args.$el);
+        console.log(args.$el);
     }
 
     Text(args) {

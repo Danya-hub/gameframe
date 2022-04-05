@@ -12,11 +12,25 @@ Objects.Rect({
         h: 40,
     },
     events: [{
-        name: 'click',
-        method() {
-            console.log('Hellow, world');
+            name: 'mousemove',
+            methods: {
+                enter() {
+                    Canvas.$el.style.cursor = 'pointer';
+                },
+                leave() {
+                    Canvas.$el.style.cursor = '';
+                }
+            },
         },
-    }],
+        {
+            name: 'click',
+            methods: {
+                enter() {
+                    console.log('Hellow, world');
+                },
+            },
+        },
+    ],
     $children: [Objects.Text({
         text: 'Click me',
         clientCompute: {
@@ -38,9 +52,5 @@ Objects.Rect({
         isFill: true,
     })],
 });
-
-// TODO: create Path2D for canvas path
-
-console.log(Canvas.ctx);
 
 new Canvas();

@@ -8,11 +8,16 @@ import {
 } from "../convert.js";
 
 function apply(func, _this, args) {
-    if (!/[A-Z]/.test(func.name)) return;
+    if (!/^[A-Z]/g.test(func.name)) return;
 
     const component = Canvas._parent(Object.assign({
-        name: func.name,
-    }, ...args));
+            name: func.name,
+        },
+        Object.keys(Path2D.prototype).includes(func.name.replace(/^\w/g, (sVal) => sVal.toLowerCase())) ? {
+            $el: new Path2D(),
+        } : {},
+        ...args
+    ));
 
     if (this._inheritStyle)
         Object.keys(this._inheritStyle).forEach(key => {
@@ -24,7 +29,7 @@ function apply(func, _this, args) {
     this.$children.push(component);
 
     return component;
-}; 
+};
 
 class Canvas {
     static $el = document.createElement('canvas');
@@ -67,34 +72,38 @@ class Canvas {
                 (comp.clientCompute?.radius || 0) + (comp.clientCompute?.x || 0) +
                 (comp.$parent?.finalCompute.x || 0) + (!comp.isFill ? comp.style?.lineWidth || 0 : 0),
             y: (comp.position?.y == 'middle' ? (comp.$parent.clientCompute?.h || comp.$parent.clientCompute?.radius * 2 || 0) / 4 :
-                    comp.position?.y == 'end' ? (comp.$parent.clientCompute?.h || 0) / 2 : 0) + 
-                (comp.clientCompute?.y || 0) + (comp.$parent?.finalCompute.y || 0) + 
-                (!comp.isFill ? comp.style?.lineWidth || 0 : 0) + parseInt(comp.style?.font.size || 0),
+                    comp.position?.y == 'end' ? (comp.$parent.clientCompute?.h || 0) / 2 : 0) +
+                (comp.clientCompute?.y || 0) + (comp.$parent?.finalCompute.y || 0) +
+                (!comp.isFill ? comp.style?.lineWidth || 0 : 0) + parseInt(comp.style?.font?.size || 0),
         };
     }
 
     renderCanvasComp(arr) {
         arr.forEach(obj => {
             this.finalCompute(obj);
-    
-            Canvas.ctx.beginPath();
+
             if (obj.style)
-                Object.keys(obj.style).forEach(key => {
+            Object.keys(obj.style).forEach(key => {
                     Canvas.ctx[key] = tryObj(obj.style[key]) ? Object.values(obj.style[key]).join(' ') : obj.style[key];
                 });
-    
+
             Figure.prototype[obj.name](obj);
-            Canvas.ctx.closePath();
-    
+
             if (obj.$children)
                 this.renderCanvasComp(obj.$children);
         });
     }
 }
 
-function setEventMouseMove() {
-    window.addEventListener('mousemove', ({clientX, clientY}) => {
-        console.log(Canvas.ctx.isPointInPath(clientX, clientY));
+function events(arrEvents) {
+    arrEvents.forEach(e => {
+        Canvas.$el.addEventListener(e.name, ({
+            clientX,
+            clientY,
+        }) => {
+            Canvas.ctx.isPointInPath(e.$el, clientX, clientY) && e.methods.enter ? e.methods.enter() :
+                e.methods.leave ? e.methods.leave() : null;
+        })
     });
 }
 
@@ -104,9 +113,14 @@ export const Objects = ReactiveFunc.call(Canvas, Figure.prototype, {
 
 export default new Proxy(Canvas, {
     construct(target, args) {
-        setEventMouseMove();
         Canvas.prototype._create();
         Canvas.prototype.renderCanvasComp(target.$children.filter(e => !e.$parent));
+
+        events(Canvas.$children.filter(comp => comp.$el && comp.events).map(comp => {
+            comp.events.forEach(event => event.$el = comp.$el);
+
+            return comp.events;
+        }).flat());
 
         return new target(...args);
     }
